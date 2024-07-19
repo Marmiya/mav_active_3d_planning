@@ -78,6 +78,8 @@ class OnlinePlanner : public PlannerI, public ModuleBase {
       current_segment_;  // root node of full trajectory tree
   std::unique_ptr<SystemConstraints> system_constraints_;
 
+  
+
   // variables
   bool planning_;                     // whether to run the main loop
   bool running_;                      // whether the planner is alive

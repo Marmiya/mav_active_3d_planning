@@ -18,7 +18,7 @@
   
   <!-- Unreal Sensor arguments (ground_truth, kinect, gaussian_depth_noise)-->
   <arg name="model_type" default="gaussian_depth_noise"/>
-  <arg name="flatten_distance" default="6.0"/>
+  <arg name="flatten_distance" default="10.0"/>
   <arg name="maximum_distance" default="0.0"/>
   
   <!-- Odometry  arguments (random_walk, ground_truth)-->
@@ -32,7 +32,7 @@
   <arg name="visualize" default="true"/>
   
   <!--  Experiment arguments -->  
-  <arg name="experiment_config" default="CityBuilding.yaml"/>
+  <arg name="experiment_config" default="L7.yaml"/>
   <arg name="record_data" default="true"/>
   <arg name="record_visualization" default="true"/>
   <arg name="data_directory" default="/home/user/Documents/Data"/> 

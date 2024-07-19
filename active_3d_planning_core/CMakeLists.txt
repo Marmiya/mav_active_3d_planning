@@ -46,6 +46,7 @@ cs_add_library(${PROJECT_NAME}
         src/module/trajectory_evaluator/evaluator_updater/yaw_planning_updaters.cpp
         src/module/trajectory_evaluator/frontier_evaluator.cpp
         src/module/trajectory_evaluator/naive_evaluator.cpp
+        src/module/trajectory_evaluator/potential.cpp
         src/module/trajectory_evaluator/next_selector/immediate_best.cpp
         src/module/trajectory_evaluator/next_selector/random_complete.cpp
         src/module/trajectory_evaluator/next_selector/random_next.cpp

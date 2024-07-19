@@ -1,37 +1,41 @@
 <launch>
+
   <!-- Gazebo arguments -->
   <arg name="mav_name" default="firefly"/>
   <arg name="gui" default="false"/>
   <arg name="verbose_gazebo" default="false"/>
 
   <!-- Voxblox arguments -->
-  <arg name="voxel_size" default="0.10"/>
+  <arg name="voxel_size" default="0.2"/>
   <arg name="voxels_per_side" default="16"/>
-  <arg name="ray_length" default="5.0"/>
+  <arg name="ray_length" default="20.0"/>
   <arg name="method" default="merged"/>
   <arg name="verbose_voxblox" default="false"/>
     
   <!-- Unreal Routine arguments -->
   <arg name="uecv_mode" default="fast"/>
-  <arg name="slowdown" default="0.0"/>
-  <arg name="delay" default="3.0"/>  
+  <arg name="slowdown" default="1.0"/>
+  <arg name="delay" default="3.0"/>
   
   <!-- Unreal Sensor arguments (ground_truth, kinect, gaussian_depth_noise) -->
-  <arg name="model_type" default="gaussian_depth_noise"/>
-  <arg name="flatten_distance" default="6.0"/>
-  <arg name="maximum_distance" default="0.0"/>
+  <arg name="model_type" default="ground_truth"/>
+  <arg name="flatten_distance" default="20.1"/>
+  <arg name="maximum_distance" default="20.0"/>
   
   <!-- Odometry  arguments (random_walk, ground_truth) -->
-  <arg name="odom_noise_model" default="random_walk"/>
+  <arg name="odom_noise_model" default="ground_truth"/>
   
   <!--  Planner arguments-->
-  <arg name="planner_config" default="planners/example_config.yaml"/>
-  
+  <arg name="planner_config" default="planners/reconstruction_test.yaml"/>
+  <!-- <arg name="planner_config" default="planners/Potential.yaml"/> -->
+
   <!--  Experiment arguments -->  
-  <arg name="experiment_config" default="CityBuilding.yaml"/>
-  
-  
-  
+  <arg name="experiment_config" default="myCity.yaml"/>
+  <arg name="record_data" default="true"/>
+  <arg name="record_visualization" default="true"/>
+  <arg name="data_directory" default="/home/marinaio/catkin_ws/mlogs"/> 
+  <arg name="data_frequency" default="30.0" />
+  <arg name="time_limit" default="30" />
 
   <!-- *** Run the Simulation *** -->
   <!-- Load experiment config -->
@@ -66,7 +70,7 @@
       <param name="use_rc_teleop" value="false"/>
       <param name="verbose" value="false" />
       <param name="reference_frame" value="world"/>
-      <param name="sampling_time" value="0.0021"/>
+      <param name="sampling_time" value="0.0020"/>
     </node>
     
     <!-- Rotor input controller -->
@@ -83,10 +87,17 @@
       <param name="noise_model" value="$(arg odom_noise_model)" />
       <param name="publish_tf" value="true" />
       <remap from="odometry_in" to="ground_truth/odometry" />
+      <param name="crop_frequency" value="500.0"/>
+      <param name="position_threshold" value="0.01"/> <!-- m-->
+      <param name="orientation_threshold" value="0.05"/> <!-- radian-->
     </node> 
 
     <!-- static camera transform -->
-    <node pkg="tf" type="static_transform_publisher" name="tf_camera_to_link" args="0 0 0 -0.5 0.5 -0.5 0.5 /camera_link /camera 100"/>  
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_camera_to_link" args="0 0 0 -0.5 0.5 -0.5 0.5 camera_link camera"/>
+
+    <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
+
   </group>
 
   <group ns="unreal">
@@ -94,8 +105,11 @@
     <node name="unreal_ros_client" pkg="unreal_cv_ros" type="unreal_ros_client.py" required="true" output="screen">
       <param name="mode" value="$(arg uecv_mode)"/>
       <param name="publish_tf" value="false"/>
-      <param name="collision_on" value="true"/>
+      <param name="collision_on" value="false"/>
+      <param name="publish_color_images" value="false"/>
+      <param name="publish_gray_images" value="false"/>
       <param name="slowdown" value="$(arg slowdown)"/>
+      <!-- <param name="camera_pose" value="$(arg camera_pose)"/> -->
       <remap from="odometry" to="/$(arg mav_name)/ground_truth/odometry" />
     </node>
     
@@ -107,6 +121,7 @@
       <param name="maximum_distance" value="$(arg maximum_distance)" />
       <param name="k_mu_2" value="0.0024" />
       <param name="k_sigma_2" value="0.0024" />
+      <param name="publish_color_images" value="true"/>
       <remap from="ue_sensor_raw" to="unreal_ros_client/ue_sensor_raw" />
     </node>
 
@@ -129,10 +144,17 @@
       <param name="ns_voxblox" value="/planner/voxblox_node" />
       <param name="delay" value="$(arg delay)" />
       <param name="startup_timeout" value="30.0" />
-      <param name="evaluate" value="false" />
+      <param name="evaluate" value="$(arg record_data)" />
+      <param name="eval_directory" value="$(arg data_directory)" />
+      <param name="eval_frequency" value="$(arg data_frequency)" />
+      <param name="time_limit" value="$(arg time_limit)" />
     </node>
   </group>
   
+  <!-- Record a rosbag of the visualization-->
+  <node pkg="rosbag" type="record" name="rosbag_vis_recorder"
+      args="record -o $(arg data_directory)/tmp_bags/tmp_bag /rosout /clock /tf /planner/voxblox_node/mesh /firefly/reference_trajectory /firefly/base_link /planner/trajectory_visualization" if="$(eval arg('record_data') and arg('record_visualization'))"/>
+
   <group ns="planner">
     <!-- Voxblox -->
     <node name="voxblox_node" pkg="voxblox_ros" type="esdf_server" output="screen" args="-alsologtostderr">
@@ -143,11 +165,13 @@
       <param name="tsdf_voxel_size" value="$(arg voxel_size)" />
       <param name="tsdf_voxels_per_side" value="$(arg voxels_per_side)" />
       <param name="color_mode" value="color" />
-      <param name="update_mesh_every_n_sec" value="1.0" />
+      <param name="update_mesh_every_n_sec" value="0.5" />
       <param name="method" value="$(arg method)" />
-      <param name="max_ray_length" value="$(arg ray_length)" />
+      <param name="max_ray_length_m" value="$(arg ray_length)" />
       <param name="allow_clear" value="true" />
       <param name="verbose" value="$(arg verbose_voxblox)" />
+      <param name="publish_slices" value="true" />
+      <param name="publish_pointclouds" value="true" />
     </node>
     
     <!-- Planner -->
@@ -158,7 +182,7 @@
       <param name="use_tf_transforms" value="false" />
       <param name="tsdf_voxel_size" value="$(arg voxel_size)" />
       <param name="tsdf_voxels_per_side" value="$(arg voxels_per_side)" />
-      <param name="update_mesh_every_n_sec" value="0.0" />   
+      <param name="update_mesh_every_n_sec" value="0.0" />
       <param name="publish_traversable" value="false" />    
       <param name="publish_pointclouds" value="false" />              
     

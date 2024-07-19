@@ -6,9 +6,13 @@ import random
 from collections import deque
 import numpy as np
 
+import filter_tf_warning
+
 # ros
 import rospy
-import tf
+import tf2_ros
+import tf.transformations
+from geometry_msgs.msg import TransformStamped
 from active_3d_planning_app_reconstruction.msg import OdometryOffset
 from nav_msgs.msg import Odometry
 
@@ -21,15 +25,15 @@ class GPSSimulator(object):
                                                     0.03)  # [m]
         self.roll_pitch_uncertainty = rospy.get_param(
             '~roll_pitch_uncertainty', 1.0)  # [deg]
-        self.yaw_uncertainty = rospy.get_param('~yaw_uncertainty',
-                                               3.0)  # [deg]
-        self.crop_frequency = rospy.get_param('~crop_frequency',
-                                              0.0)  # Hz (0 for max throughput)
+        self.yaw_uncertainty = rospy.get_param('~yaw_uncertainty', 3.0)  # [deg]
+        self.crop_frequency = rospy.get_param('~crop_frequency', 0.0)  # Hz (0 for max throughput)
         self.noise_model = rospy.get_param(
             '~noise_model',
             "ground_truth")  # ground_truth, uniform, gaussian, random_walk
         self.publish_difference = rospy.get_param('~publish_difference', True)
         self.publish_tf = rospy.get_param('~publish_tf', True)
+        self.position_threshold = rospy.get_param('~position_threshold', 0.05) # [m]
+        self.orientation_threshold = rospy.get_param('~orientation_threshold', 0.05) # [rad]
         # constants
         self.uncertainty = np.array([self.position_uncertainty] * 3 +
                                     [self.roll_pitch_uncertainty] * 2 +
@@ -71,8 +75,9 @@ class GPSSimulator(object):
                                             OdometryOffset,
                                             queue_size=10)
         if self.publish_tf:
-            self.tf_br = tf.TransformBroadcaster(
-            )  # Publish camera transforms in tf
+            self.tf_br = tf2_ros.TransformBroadcaster()  # Publish camera transforms in tf
+            
+        self.last_odom = None
 
     def odom_callback(self, ros_data):
         ''' Apply some artificial noise to the odom msg and republish. '''
@@ -130,17 +135,23 @@ class GPSSimulator(object):
 
         # Publish odometry + transform data
         self.pub.publish(ros_data)
-
-        # tf
+        
         if self.publish_tf:
-            self.tf_br.sendTransform(
-                (ros_data.pose.pose.position.x, ros_data.pose.pose.position.y,
-                 ros_data.pose.pose.position.z),
-                (ros_data.pose.pose.orientation.x,
-                 ros_data.pose.pose.orientation.y,
-                 ros_data.pose.pose.orientation.z,
-                 ros_data.pose.pose.orientation.w), ros_data.header.stamp,
-                "camera_link", "world")
+            
+            if self.last_odom is None or distance(ros_data, self.last_odom) > self.position_threshold or quaternion_distance(ros_data, self.last_odom) > self.orientation_threshold:
+        
+                t = TransformStamped()
+                t.header.stamp = ros_data.header.stamp
+                t.header.frame_id = "world"
+                t.child_frame_id = "camera_link"
+                t.transform.translation.x = ros_data.pose.pose.position.x
+                t.transform.translation.y = ros_data.pose.pose.position.y
+                t.transform.translation.z = ros_data.pose.pose.position.z
+                t.transform.rotation = ros_data.pose.pose.orientation
+                self.tf_br.sendTransform(t)
+                
+                self.last_odom = ros_data
+
         # Update time count
         if self.crop_frequency > 0.0:
             self.times.append(time_diff)
@@ -160,7 +171,7 @@ class GPSSimulator(object):
             ros_data.pose.pose.orientation.x, ros_data.pose.pose.orientation.y,
             ros_data.pose.pose.orientation.z, ros_data.pose.pose.orientation.w
         ]
-        (r, p, y) = tf.transformations.euler_from_quaternion(orientation)
+        (r, p, y) = tf2_ros.transformations.euler_from_quaternion(orientation)
 
         r = self.add_angle(r, offset[3] / 180.0 * math.pi)
         p = self.add_angle(p, offset[4] / 180.0 * math.pi)
@@ -320,6 +331,22 @@ class GPSSimulator(object):
         if angle < -math.pi:
             angle += 2.0 * math.pi
         return angle
+
+
+def distance(odom1, odom2):
+    pos1 = odom1.pose.pose.position
+    pos2 = odom2.pose.pose.position
+    return math.sqrt((pos1.x - pos2.x)**2 + (pos1.y - pos2.y)**2 + (pos1.z - pos2.z)**2)
+
+def quaternion_distance(odom1, odom2):
+    q1 = odom1.pose.pose.orientation
+    q2 = odom2.pose.pose.orientation
+    
+    dot_product = q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w
+
+    dot_product = max(min(dot_product, 1.0), -1.0)
+
+    return math.acos(2 * dot_product * dot_product - 1)
 
 
 if __name__ == '__main__':

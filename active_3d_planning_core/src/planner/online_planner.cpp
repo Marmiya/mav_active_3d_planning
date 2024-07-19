@@ -395,7 +395,6 @@ void OnlinePlanner::expandTrajectories() {
         static_cast<double>(std::clock() - timer) / CLOCKS_PER_SEC;
     timer = std::clock();
   }
-
   // Expand the target
   std::vector<TrajectorySegment*> created_segments;
   bool success =
@@ -409,7 +408,6 @@ void OnlinePlanner::expandTrajectories() {
   if (success) {
     new_segments_++;
   }
-
   // Evaluate newly added segments: Gain
   for (int i = 0; i < created_segments.size(); ++i) {
     trajectory_evaluator_->computeGain(created_segments[i]);

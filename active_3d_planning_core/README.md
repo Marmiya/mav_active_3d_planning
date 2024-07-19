@@ -6,4 +6,4 @@ Contains:
 * Definitions of data structures and interfaces
 * Core workflow of modules and factory
 * Base classes for all modules and some planners
-* Implementations of generally applicable modules
+* Implementations of generally applicable module

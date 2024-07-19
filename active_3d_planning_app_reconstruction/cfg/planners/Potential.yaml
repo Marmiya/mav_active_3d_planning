@@ -1,4 +1,4 @@
-#Config for Volumetric Exploration Planner
+#Config for 3D Reconstruction Planner
 replan_pos_threshold: 0.15
 replan_yaw_threshold: 0.15
 
@@ -27,28 +27,28 @@ system_constraints:
 trajectory_generator:
   collision_optimistic: false
   bounding_volume_args: "/map_bounding_volume"
-  clearing_radius: 1.0
+  clearing_radius: 5.0
 
   type: "RRTStar"
   all_semgents_feasible: false
   crop_segments: true
   crop_margin: 0.3
-  crop_min_length: 0.5
-  min_path_length: 0.5
-  max_extension_range: 1.5
+  crop_min_length: 1.5
+  min_path_length: 1.5
+  max_extension_range: 10
   maximum_tries: 1000
   sampling_rate: 20.0
   sample_yaw: true
 
   sampling_mode: "semilocal"
-  semilocal_sampling_count: 10
-  semilocal_sampling_radius_max: 1.5
-  semilocal_sampling_radius_min: 1.5
+  semilocal_sampling_count: 20
+  semilocal_sampling_radius_max: 8
+  semilocal_sampling_radius_min: 3
 
   rewire_root: true
   rewire_intermediate: true
   reinsert_root: true
-  max_rewire_range: 1.6
+  max_rewire_range: 5
   max_density_range: 1.0
   n_neighbors: 20
 
@@ -67,16 +67,25 @@ trajectory_evaluator:
     update_sections_separate: false
 
     following_evaluator:
-      type: "NaiveEvaluator"
+      type: "VoxelWeightEvaluator"
       visualize_sensor_view: true
+      accurate_frontiers: true
+      checking_distance: 2.0
       bounding_volume_args: "/target_bounding_volume"
+      camera_params_ns: "/unreal/unreal_ros_client/camera_params"
 
-      sensor_model:
+      frontier_voxel_weight: 1.0
+      new_voxel_weight: 0.0
+      min_impact_factor: 0.01
+      ray_angle_x: 0.002454
+      ray_angle_y: 0.002681
+
+      sensor_model: 
         type: "IterativeRayCaster"
         sampling_time: 0.0
-        ray_length: 5.0
+        ray_length: 20.0
         focal_length: 320.0
-        resolution_x: 640 # 640-90/172-30/127-22.5 deg fov
+        resolution_x: 640
         resolution_y: 480
         downsampling_factor: 5.0
 

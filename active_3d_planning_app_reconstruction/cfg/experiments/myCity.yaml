@@ -1,0 +1,14 @@
+map_bounding_volume:
+  x_min: -200
+  x_max: 200
+  y_min: -200
+  y_max: 200
+  z_min: -5
+  z_max: 80
+
+# System Constraints
+planner:
+  system_constraints:
+    v_max: 1.0
+    a_max: 1.0
+    yaw_rate_max: 1.57

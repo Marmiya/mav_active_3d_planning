@@ -71,7 +71,7 @@ class EvalData(object):
                             self.eval_directory)
             os.mkdir(os.path.join(self.eval_directory, "voxblox_maps"))
             self.eval_data_file = open(
-                os.path.join(self.eval_directory, "voxblox_data.csv"), 'wb')
+                os.path.join(self.eval_directory, "voxblox_data.csv"), 'w')
             self.eval_writer = csv.writer(self.eval_data_file,
                                           delimiter=',',
                                           quotechar='|',

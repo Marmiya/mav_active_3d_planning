@@ -11,7 +11,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 namespace active_3d_planning {
 
 OnlinePlanner::OnlinePlanner(ModuleFactory* factory,
@@ -55,6 +54,10 @@ void OnlinePlanner::setupFromParamMap(Module::ParamMap* param_map) {
   setParam<double>(param_map, "min_new_value", &p_min_new_value_, 0.0);
   setParam<int>(param_map, "expand_batch", &p_expand_batch_, 1);
   p_expand_batch_ = std::max(p_expand_batch_, 1);
+  setParam<int>(param_map, "mode", &p_mode_, 0);
+  if (p_mode_ == 1){
+    setParam<std::string>(param_map, "fixed_trajectory_file", &p_fixed_traj_path, "");
+  }
 
   // Setup members
   std::string args;  // default args extends the parent namespace
@@ -178,9 +181,19 @@ void OnlinePlanner::planningLoop() {
 }
 
 void OnlinePlanner::loopIteration() {
-  // Continuosly expand the trajectory space
-  for (int i = 0; i < p_expand_batch_; ++i) {
-    expandTrajectories();
+
+  if (p_mode_ == 0){
+    // Continuosly expand the trajectory space
+    for (int i = 0; i < p_expand_batch_; ++i) {
+      expandTrajectories();
+    }
+  }
+  else if (p_mode_ == 1){
+    generateFixedTrajectory();
+  }
+  else{
+    // Error
+    printError("Invalid mode set in OnlinePlanner");
   }
 
   if (!min_new_value_reached_) {
@@ -436,6 +449,47 @@ void OnlinePlanner::expandTrajectories() {
     perf_log_data_[4] +=
         static_cast<double>(std::clock() - timer) / CLOCKS_PER_SEC;
   }
+}
+
+void OnlinePlanner::generateFixedTrajectory() {
+
+  // Load fixed trajectory
+  EigenTrajectoryPointVector fixed_trajectory;
+  // The file format is a txt and each line is a point in the trajectory
+  // The format of each line is x y z yaw
+  std::ifstream file(p_fixed_traj_path);
+  if (!file.is_open()) {
+    printError("Could not open fixed trajectory file: " + p_fixed_traj_path);
+    return;
+  }
+  std::string line;
+  while (std::getline(file, line)) {
+    std::istringstream iss(line);
+    EigenTrajectoryPoint point;
+    // x y z
+    iss >> point.position_W.x() >> point.position_W.y() >> point.position_W.z();
+    // yaw
+    double yaw;
+    iss >> yaw;
+    point.setFromYaw(yaw);
+    fixed_trajectory.push_back(point);
+  }
+
+  // Create a new segment
+  auto new_segment = std::unique_ptr<TrajectorySegment>(new TrajectorySegment());
+  new_segment->trajectory = fixed_trajectory;
+
+  current_segment_->children.push_back(std::move(new_segment));
+
+  // Evaluate newly added segments: Gain
+
+  trajectory_evaluator_->computeGain(current_segment_->children.back().get());
+
+  // Costs
+  trajectory_evaluator_->computeCost(current_segment_->children.back().get());
+
+  // Final value
+  trajectory_evaluator_->computeValue(current_segment_->children.back().get());
 }
 
 void OnlinePlanner::publishTrajectoryVisualization(

@@ -78,8 +78,6 @@ class OnlinePlanner : public PlannerI, public ModuleBase {
       current_segment_;  // root node of full trajectory tree
   std::unique_ptr<SystemConstraints> system_constraints_;
 
-  
-
   // variables
   bool planning_;                     // whether to run the main loop
   bool running_;                      // whether the planner is alive
@@ -129,6 +127,10 @@ class OnlinePlanner : public PlannerI, public ModuleBase {
   bool p_highlight_executed_trajectory_;  // true: print executed trajectory in
                                           // bold red
 
+  int p_mode_;  // 0: normal, 1: fixed trajectory, 2: no planning
+
+  std::string p_fixed_traj_path;  // path to fixed trajectory
+
   // methods
   virtual void initializePlanning();
 
@@ -137,6 +139,8 @@ class OnlinePlanner : public PlannerI, public ModuleBase {
   virtual bool requestNextTrajectory();
 
   virtual void expandTrajectories();
+
+  void generateFixedTrajectory();
 
   virtual void requestMovement(
       const EigenTrajectoryPointVector& trajectory) = 0;

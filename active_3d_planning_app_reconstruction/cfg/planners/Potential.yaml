@@ -84,9 +84,9 @@ trajectory_evaluator:
         type: "IterativeRayCaster"
         sampling_time: 0.0
         ray_length: 20.0
-        focal_length: 320.0
-        resolution_x: 640
-        resolution_y: 480
+        focal_length: 512.0
+        resolution_x: 1024
+        resolution_y: 768
         downsampling_factor: 5.0
 
       cost_computer:

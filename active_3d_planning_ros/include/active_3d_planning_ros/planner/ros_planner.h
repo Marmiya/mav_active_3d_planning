@@ -51,6 +51,8 @@ class RosPlanner : public OnlinePlanner {
 
   void printError(const std::string& text) override;
 
+  void testForFixedTrajectory();
+
  protected:
   // ros
   ::ros::NodeHandle nh_;

@@ -238,5 +238,10 @@ void RosPlanner::printWarning(const std::string& text) {
 
 void RosPlanner::printError(const std::string& text) { ROS_ERROR_STREAM(text); }
 
+
+void RosPlanner::testForFixedTrajectory(){
+  
+}
+
 }  // namespace ros
 }  // namespace active_3d_planning

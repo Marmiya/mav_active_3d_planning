@@ -16,6 +16,10 @@
   <arg name="uecv_mode" default="fast"/>
   <arg name="slowdown" default="1.0"/>
   <arg name="delay" default="3.0"/>
+  <arg name="init_pos" default="0 0 5"/>
+  <arg name="unrealcv_height" default="768"/>
+  <arg name="unrealcv_width" default="1024"/>
+  <arg name="unrealcv_ip" default="172.31.178.182"/>
   
   <!-- Unreal Sensor arguments (ground_truth, kinect, gaussian_depth_noise) -->
   <arg name="model_type" default="ground_truth"/>
@@ -26,8 +30,8 @@
   <arg name="odom_noise_model" default="ground_truth"/>
   
   <!--  Planner arguments-->
-  <arg name="planner_config" default="planners/reconstruction_test.yaml"/>
-  <!-- <arg name="planner_config" default="planners/Potential.yaml"/> -->
+  <arg name="planner_config" default="planners/Potential.yaml"/>
+  <arg name="trajectory_file" default="$(find active_3d_planning_app_reconstruction)/cfg/fixed_trajectories/test.txt"/>
 
   <!--  Experiment arguments -->  
   <arg name="experiment_config" default="myCity.yaml"/>
@@ -50,6 +54,7 @@
     <arg name="paused" value="true" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="verbose" value="$(arg verbose_gazebo)"/>
+    <arg name="use_sim_time" value="false"/>
   </include>
 
   <group ns="$(arg mav_name)">
@@ -94,10 +99,6 @@
 
     <!-- static camera transform -->
     <node pkg="tf2_ros" type="static_transform_publisher" name="tf_camera_to_link" args="0 0 0 -0.5 0.5 -0.5 0.5 camera_link camera"/>
-
-    <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
-
   </group>
 
   <group ns="unreal">
@@ -109,8 +110,11 @@
       <param name="publish_color_images" value="false"/>
       <param name="publish_gray_images" value="false"/>
       <param name="slowdown" value="$(arg slowdown)"/>
-      <!-- <param name="camera_pose" value="$(arg camera_pose)"/> -->
+      <param name="reset_init_pos" value="$(arg init_pos)"/>
+      <param name="height" value="$(arg unrealcv_height)"/>
+      <param name="width" value="$(arg unrealcv_width)"/>
       <remap from="odometry" to="/$(arg mav_name)/ground_truth/odometry" />
+      <param name="ip" value="$(arg unrealcv_ip)"/>
     </node>
     
     <!-- Unreal sensor model -->
@@ -131,7 +135,7 @@
       <param name="ns_gazebo" value="/gazebo" />
       <param name="monitor" value="true" />
       <param name="horizon" value="20" />
-      <remap from="ue_raw_in" to="unreal_ros_client/ue_sensor_raw" />
+      <!-- <remap from="ue_raw_in" to="unreal_ros_client/ue_sensor_raw" /> -->
       <remap from="ue_out_in" to="unreal_sensor_model/ue_sensor_out" />
     </node>
     
@@ -174,6 +178,10 @@
       <param name="publish_pointclouds" value="true" />
     </node>
     
+    <!-- <node name="dust3r" pkg="Pretrianed_models_client" type="dust3r.py" output="screen">
+      <remap from="ue_sensor_raw" to="/unreal/unreal_ros_client/ue_sensor_raw" />
+    </node> -->
+
     <!-- Planner -->
     <node name="planner_node" pkg="active_3d_planning_app_reconstruction" type="reconstruction_planner_node" output="screen">
 		  <!-- Voxblox Server -->
@@ -184,7 +192,9 @@
       <param name="tsdf_voxels_per_side" value="$(arg voxels_per_side)" />
       <param name="update_mesh_every_n_sec" value="0.0" />
       <param name="publish_traversable" value="false" />    
-      <param name="publish_pointclouds" value="false" />              
+      <param name="publish_pointclouds" value="false" />
+      <param name="mode" value="1"/>
+      <param name="fixed_trajectory_file" value="$(arg trajectory_file)"/>  
     
     	<!-- General Settings -->
       <remap from="odometry" to="/$(arg mav_name)/ground_truth/odometry" />

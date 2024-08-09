@@ -142,7 +142,6 @@ Visualization Manager:
         candidate_trajectories: true
         canidate_gains: true
         completed_trajectory: true
-        current_goal: true
         trajectory_evaluation: true
       Queue Size: 100
       Value: true
@@ -183,7 +182,7 @@ Visualization Manager:
       Value: false
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /LMs/potential_node_ros/masked_image_with_contours
+      Image Topic: /unreal/unreal_sensor_model/ue_color_image_out
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -216,7 +215,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.10000000149011612
       Style: Flat Squares
-      Topic: /LMs/potential_node_ros/filtered_cloud
+      Topic: /unreal/unreal_sensor_model/ue_sensor_out
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -295,5 +294,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 4976
-  X: 2304
-  Y: 270
+  X: 3024
+  Y: 741

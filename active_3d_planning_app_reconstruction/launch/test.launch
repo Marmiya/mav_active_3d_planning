@@ -11,7 +11,7 @@
   <arg name="ray_length" default="20.0"/>
   <arg name="method" default="merged"/>
   <arg name="verbose_voxblox" default="false"/>
-    
+
   <!-- Unreal Routine arguments -->
   <arg name="camera_id" default="1"/>
   <arg name="uecv_mode" default="fast"/>
@@ -20,8 +20,8 @@
   <arg name="init_pos" default="0 0 500"/>
   <arg name="unrealcv_height" default="768"/>
   <arg name="unrealcv_width" default="1024"/>
-  <arg name="unrealcv_ip" default="172.31.178.17"/>
-  
+  <arg name="unrealcv_ip" default="127.0.0.1"/>
+
   <!-- Unreal Sensor arguments (ground_truth, kinect, gaussian_depth_noise) -->
   <arg name="model_type" default="ground_truth"/>
   <arg name="flatten_distance" default="20.1"/>
@@ -181,9 +181,15 @@
       <param name="publish_pointclouds" value="true" />
     </node>
     
-    <!-- <node name="dust3r" pkg="Pretrianed_models_client" type="dust3r.py" output="screen">
+    <node name="gsam" pkg="pretrained_models_client" type="gsam.py" output="screen">
       <remap from="ue_sensor_raw" to="/unreal/unreal_ros_client/ue_sensor_raw" />
-    </node> -->
+      <param name="if_log" value="True" />
+    </node>
+
+    <node name="mast3r" pkg="pretrained_models_client" type="mast3r.py" output="screen">
+      <remap from="gsam_result" to="/planner/gsam_result" />
+      <param name="if_log" value="True" />
+    </node>
 
     <!-- Planner -->
     <node name="planner_node" pkg="active_3d_planning_app_reconstruction" type="reconstruction_planner_node" output="screen">

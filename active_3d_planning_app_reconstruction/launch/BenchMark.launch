@@ -20,7 +20,7 @@
   <arg name="init_pos" default="0 0 500"/>
   <arg name="unrealcv_height" default="768"/>
   <arg name="unrealcv_width" default="1024"/>
-  <arg name="unrealcv_ip" default="172.31.178.17"/>
+  <arg name="unrealcv_ip" default="127.0.0.1"/>
   
   <!-- Unreal Sensor arguments (ground_truth, kinect, gaussian_depth_noise) -->
   <arg name="model_type" default="ground_truth"/>

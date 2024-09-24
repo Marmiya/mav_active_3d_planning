@@ -133,14 +133,14 @@ void RosPlanner::odomCallback(const nav_msgs::Odometry& msg) {
 
   if (running_ && !target_reached_) {
     // check goal pos reached (if tol is set)
-    ROS_INFO_STREAM("Current position: " << current_position_.transpose() 
-    << " Target position: " << target_position_.transpose() << " Difference: " << (target_position_ - current_position_).norm());
+    // ROS_INFO_STREAM("Current position: " << current_position_.transpose() 
+    // << " Target position: " << target_position_.transpose() << " Difference: " << (target_position_ - current_position_).norm());
     if (p_replan_pos_threshold_ <= 0 ||
         (target_position_ - current_position_).norm() <
             p_replan_pos_threshold_) {
       // check goal yaw reached (if tol is set)
       double yaw = tf::getYaw(msg.pose.pose.orientation);
-      ROS_INFO_STREAM("Yaw: " << yaw << "  Target yaw: " << target_yaw_ << "  Difference: " << defaults::angleDifference(target_yaw_, yaw));
+      // ROS_INFO_STREAM("Yaw: " << yaw << "  Target yaw: " << target_yaw_ << "  Difference: " << defaults::angleDifference(target_yaw_, yaw));
       if (p_replan_yaw_threshold_ <= 0 ||
           defaults::angleDifference(target_yaw_, yaw) <
               p_replan_yaw_threshold_) {

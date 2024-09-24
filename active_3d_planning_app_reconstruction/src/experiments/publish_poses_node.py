@@ -67,8 +67,8 @@ class Trajectory2Pose(object):
         if self.target_queue:
             next_target = self.target_queue[0]  # Get the next target point (first point in the queue)
             self.pub.publish(next_target)
-            rospy.loginfo("Publishing next position: {}".format(next_target.position))
-            rospy.loginfo("Publishing next yaw: {}".format(self.calculate_yaw(next_target.orientation)))
+            # rospy.loginfo("Publishing next position: {}".format(next_target.position))
+            # rospy.loginfo("Publishing next yaw: {}".format(self.calculate_yaw(next_target.orientation)))
         else:
             rospy.loginfo("All targets have been reached.")
 

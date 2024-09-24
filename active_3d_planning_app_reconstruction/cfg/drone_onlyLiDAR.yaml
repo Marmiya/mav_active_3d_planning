@@ -10,8 +10,8 @@ sensors:
     image_type: Scene
     rate: 3
     CaptureSettings:   
-      Width: 640
-      Height: 480
+      Width: 1024
+      Height: 768
       FOV_Degrees: 90
     T_B_S:
       - [1, 0, 0, 0.3]
@@ -25,8 +25,8 @@ sensors:
     rate: 3
     pixels_as_float: true
     CaptureSettings:   
-      Width: 640
-      Height: 480
+      Width: 1024
+      Height: 768
       FOV_Degrees: 90
     T_B_S:
       - [1, 0, 0, 0.3]
@@ -39,8 +39,8 @@ sensors:
     image_type: Segmentation
     rate: 3
     CaptureSettings:   
-      Width: 640
-      Height: 480
+      Width: 1024
+      Height: 768
       FOV_Degrees: 90
     T_B_S:
       - [1, 0, 0, 0.3]

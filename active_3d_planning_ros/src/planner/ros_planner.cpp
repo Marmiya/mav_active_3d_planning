@@ -29,7 +29,7 @@ RosPlanner::RosPlanner(const ::ros::NodeHandle& nh,
       "command/trajectory", 10);
   trajectory_vis_pub_ = nh_.advertise<visualization_msgs::MarkerArray>(
       "trajectory_visualization", 100);
-  odom_sub_ = nh_.subscribe("odometry", 1, &RosPlanner::odomCallback, this);
+  odom_sub_ = nh_.subscribe("odometry", 10, &RosPlanner::odomCallback, this);
   get_cpu_time_srv_ = nh_private_.advertiseService(
       "get_cpu_time", &RosPlanner::cpuSrvCallback, this);
 
@@ -130,13 +130,17 @@ void RosPlanner::odomCallback(const nav_msgs::Odometry& msg) {
   current_orientation_ = Eigen::Quaterniond(
       msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
       msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
+
   if (running_ && !target_reached_) {
     // check goal pos reached (if tol is set)
+    ROS_INFO_STREAM("Current position: " << current_position_.transpose() 
+    << " Target position: " << target_position_.transpose() << " Difference: " << (target_position_ - current_position_).norm());
     if (p_replan_pos_threshold_ <= 0 ||
         (target_position_ - current_position_).norm() <
             p_replan_pos_threshold_) {
       // check goal yaw reached (if tol is set)
       double yaw = tf::getYaw(msg.pose.pose.orientation);
+      ROS_INFO_STREAM("Yaw: " << yaw << "  Target yaw: " << target_yaw_ << "  Difference: " << defaults::angleDifference(target_yaw_, yaw));
       if (p_replan_yaw_threshold_ <= 0 ||
           defaults::angleDifference(target_yaw_, yaw) <
               p_replan_yaw_threshold_) {
